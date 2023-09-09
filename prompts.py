@@ -9,6 +9,8 @@ defaultStories = [
 ]
 
 prompts = {
+    # GENERAL ---------------------------------------------------------------------------------
+    # CRIME -----------------------------------------------------------------------------------
     "crime_intro_1": {
         "tags": ["introduction","crime"],
         "lines": [
@@ -118,5 +120,92 @@ prompts = {
                 "text": "Well folks, that's all the time we have for tonight. Goodbye."
             }
         ]
-    }
+    },
+    # POLITICS -----------------------------------------------------------------------------------
+    "politics_intro_1": {
+        "tags": ["introduction", "politics"],
+        "lines": [
+            {"speaker": "host", "text": "Good evening, I'm {host} {host_lastname} and this is Politics Today."},
+            {"speaker": "cohost", "text": "And I'm {cohost} {cohost_lastname}. The political landscape is buzzing with activity!"},
+            {
+                "speaker": "host",
+                "text": "Indeed, the latest development from the Capitol is {main_story}.",
+                "prompts": {
+                    "id": "main_story",
+                    "description": "Main political event or development for the day."
+                }
+            }
+        ],
+    },
+    "politics_segment_1": {
+        "tags": ["segment", "politics"],
+        "lines": [
+            {"speaker": "host", "text": "We're joined by Senator {senator}."},
+            {
+                "speaker": "senator",
+                "text": "Thank you for having me. It's crucial to address {senator_issue}.",
+                "prompts": {
+                    "id": "senator_issue",
+                    "description": "Primary political issue Senator wants to discuss."
+                }
+            },
+            {"speaker": "cohost", "text": "Senator, what are your thoughts on the opposition's stance?"},
+            {
+                "speaker": "senator",
+                "text": "Well, it's a complex issue, but I believe {senator_response}.",
+                "prompts": {
+                    "id": "senator_response",
+                    "description": "Senator's response or viewpoint on the issue at hand."
+                }
+            }
+        ],
+    },
+    "politics_conclusion_1": {
+        "tags": ["conclusion", "politics"],
+        "lines": [
+            {"speaker": "host", "text": "It's been an eventful day in the world of politics."},
+            {"speaker": "cohost", "text": "Absolutely. Stay informed and we'll be back with more updates tomorrow."}
+        ],
+    },
+
+    # SPORTS -----------------------------------------------------------------------------------------------------------
+
+    "sports_intro_1": {
+        "tags": ["introduction", "sports"],
+        "lines": [
+            {"speaker": "host", "text": "Welcome to Sports Night, I'm {host} {host_lastname}."},
+            {"speaker": "cohost", "text": "And I'm {cohost} {cohost_lastname}. What a game we had last night!"},
+            {
+                "speaker": "host",
+                "text": "Truly memorable! {main_sports_story}.",
+                "prompts": {
+                    "id": "main_sports_story",
+                    "description": "Main highlight or event from the recent sports game or match."
+                }
+            }
+        ],
+    },
+    "sports_segment_1": {
+        "tags": ["segment", "sports"],
+        "lines": [
+            {"speaker": "host", "text": "Joining us now is {athlete_name}, the star player from last night's game."},
+            {"speaker": "athlete", "text": "Thanks for having me! That was one of my best performances."},
+            {"speaker": "cohost", "text": "Tell us about that incredible goal."},
+            {
+                "speaker": "athlete",
+                "text": "It was a team effort, but when I saw the opening, I just went for it.",
+                "prompts": {
+                    "id": "athlete_goal_detail",
+                    "description": "Details or circumstances surrounding the athlete's memorable goal or play."
+                }
+            }
+        ],
+    },
+    "sports_conclusion_1": {
+        "tags": ["conclusion", "sports"],
+        "lines": [
+            {"speaker": "host", "text": "What a day in sports history."},
+            {"speaker": "cohost", "text": "Absolutely! We'll be back tomorrow with more highlights."}
+        ],
+    },
 }
