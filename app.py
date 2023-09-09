@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flask_restful import Api, Resource
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
@@ -6,7 +6,7 @@ from flask_socketio import SocketIO, join_room
 import random
 
 from prompts import prompts
-from categories import categories
+from storyTypes import storyTypes
 
 app = Flask(__name__)
 api = Api(app)
@@ -35,7 +35,7 @@ def generate_lobby_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
 
 def assign_roles(lobby_code, story_type):
-    available_roles = categories.get(story_type, [])
+    available_roles = storyTypes.get(story_type, [])
     
     if "Host" in available_roles:
         available_roles.remove("Host")
@@ -62,12 +62,11 @@ def assign_roles(lobby_code, story_type):
 
     
 # ------------------- Resource Classes (API Routing) ------------------------
+# when "join" or "create game" button is pressed
 class PlayerResource(Resource):
     def post(self, name, lobby_code, storyType=None):
         new_player = Player(name, lobby_code)
         if lobby_code in lobbies:
-            if storyType and lobbies[lobby_code]['storyType'] != storyType:
-                return {"error": "Cannot change the storyType for an existing lobby."}, 400
             lobbies[lobby_code]['players'].append(new_player)
         else:
             lobbies[lobby_code] = {'players': [new_player], 'storyType': storyType if storyType else 'Other'}
@@ -87,6 +86,8 @@ class LobbyResource(Resource):
 class RoleAssignmentResource(Resource):
     def post(self, lobby_code, story_type):
         assign_roles(lobby_code, story_type)
+
+        socketio.emit('start_game', room=lobby_code)
         
         return "Players successfully assigned roles"
 
@@ -101,7 +102,7 @@ def handle_join(data):
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'storyType': None}, endpoint='player_without_storyType')
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/<string:storyType>', endpoint='player_with_storyType')
 api.add_resource(LobbyResource, '/create_lobby')
-api.add_resource(RoleAssignmentResource, '/assign_roles/<string:lobby_code>/<string:storyType>')
+api.add_resource(RoleAssignmentResource, '/assign_roles/<string:lobby_code>/<string:story_type>')
 
 # ------------------ Run ----------------------------------
 @app.route('/')
