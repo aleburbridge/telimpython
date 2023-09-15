@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api, Resource
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
@@ -31,6 +31,7 @@ class Player:
         }
 
 # ------------------- Game Logic (Functions) ------------------------
+
 def generate_lobby_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
 
@@ -56,12 +57,11 @@ def assign_roles(lobby_code, story_type):
             if idx < len(available_roles):
                 role = available_roles[idx]
                 player.role = role
-        print("ROLES ASSIGNED!!!!")
-        print(players)
     return [{"name": player.name, "role": player.role} for player in players]
 
     
 # ------------------- Resource Classes (API Routing) ------------------------
+
 # when "join" or "create game" button is pressed
 class PlayerResource(Resource):
     def post(self, name, lobby_code, storyType=None):
@@ -71,8 +71,13 @@ class PlayerResource(Resource):
         else:
             lobbies[lobby_code] = {'players': [new_player], 'storyType': storyType if storyType else 'Other'}
         return new_player.to_dict(), 201
-
     
+    def get(self, lobby_code):
+        if lobby_code not in lobbies:
+            return {'error': 'Lobby not found'}, 404
+        players = lobbies[lobby_code]['players']
+        return [{"name": player.name, "role": player.role} for player in players], 200
+
 class LobbyResource(Resource):
     def post(self):
         lobby_code = generate_lobby_code()
@@ -80,8 +85,19 @@ class LobbyResource(Resource):
         while lobby_code in lobbies:
             lobby_code = generate_lobby_code()
         
-        lobbies[lobby_code] = {'players': [], 'storyType': None}
+        lobbies[lobby_code] = {'players': [], 'storyType': None, 'story': None}
         return {"lobby_code": lobby_code}, 201
+
+# For saving the story to the lobby
+class StoryResource(Resource):
+    def post(self, lobby_code):
+        story = request.json['story']
+        if lobby_code not in lobbies:
+            return {'error': 'Lobby not found'}, 404
+        lobbies[lobby_code]['story'] = story
+        socketio.emit('updateStory', {'story': story}, room=lobby_code)
+        return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
+
     
 class RoleAssignmentResource(Resource):
     def post(self, lobby_code, story_type):
@@ -92,6 +108,7 @@ class RoleAssignmentResource(Resource):
         return "Players successfully assigned roles"
 
 # ------------------ Routes ----------------------------------
+
 @socketio.on('join')
 def handle_join(data):
     lobby_code = data['lobbyCode']
@@ -101,8 +118,10 @@ def handle_join(data):
 
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'storyType': None}, endpoint='player_without_storyType')
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/<string:storyType>', endpoint='player_with_storyType')
+api.add_resource(PlayerResource, '/players/<string:lobby_code>/', endpoint='player_with_role')
 api.add_resource(LobbyResource, '/create_lobby')
 api.add_resource(RoleAssignmentResource, '/assign_roles/<string:lobby_code>/<string:story_type>')
+api.add_resource(StoryResource, '/story/<string:lobby_code>')
 
 # ------------------ Run ----------------------------------
 @app.route('/')
