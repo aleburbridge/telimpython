@@ -95,7 +95,7 @@ class StoryResource(Resource):
         if lobby_code not in lobbies:
             return {'error': 'Lobby not found'}, 404
         lobbies[lobby_code]['story'] = story
-        socketio.emit('updateStory', {'story': story}, room=lobby_code)
+        socketio.emit('updateStory', story, room=lobby_code)
         return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
 
     
