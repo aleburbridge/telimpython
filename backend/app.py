@@ -5,7 +5,6 @@ from flask_socketio import SocketIO, join_room
 
 import random
 
-from segments import prompts
 from story_types import story_types
 from ScriptBuilder import ScriptBuilder
 
@@ -63,8 +62,8 @@ def assign_roles(lobby_code, story_type):
 def buildScript(lobby_code):
     script_players = [player for player in lobbies[lobby_code]['players']]
     script_story_type = lobbies[lobby_code]['story_type']
-    story = lobbies[lobby_code]['story']  
-    script_builder = ScriptBuilder(script_players, script_story_type, story)
+    script_story = lobbies[lobby_code]['story']  
+    script_builder = ScriptBuilder(script_players, script_story_type, script_story)
     
     final_script = script_builder.build()
     prompts = script_builder.extract_prompts(final_script)

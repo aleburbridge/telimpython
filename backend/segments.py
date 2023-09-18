@@ -1,4 +1,3 @@
-# TODO couple these with story types.....by using a TUPLE?????
 defaultStories = [
   "Pockets stop working worldwide",
   "Very hungry caterpillar escapes the zoo",
