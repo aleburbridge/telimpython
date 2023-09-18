@@ -6,7 +6,8 @@ from flask_socketio import SocketIO, join_room
 import random
 
 from prompts import prompts
-from storyTypes import storyTypes
+from story_types import story_types
+from scriptBuilder import ScriptBuilder
 
 app = Flask(__name__)
 api = Api(app)
@@ -36,7 +37,7 @@ def generate_lobby_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
 
 def assign_roles(lobby_code, story_type):
-    available_roles = storyTypes.get(story_type, [])
+    available_roles = story_types.get(story_type, [])
     
     if "Host" in available_roles:
         available_roles.remove("Host")
@@ -59,17 +60,34 @@ def assign_roles(lobby_code, story_type):
                 player.role = role
     return [{"name": player.name, "role": player.role} for player in players]
 
+def buildScript(lobby_code):
+    # need to get: roles, players, and story type
+    script_players = [player for player in lobbies[lobby_code]['players']]
+    script_roles = [player.role for player in script_players]
+    script_story_type = lobbies[lobby_code]['story_type']
+    script_builder = ScriptBuilder(script_players, script_roles, script_story_type) 
     
 # ------------------- Resource Classes (API Routing) ------------------------
 
-# when "join" or "create game" button is pressed
+# when "create game" or "join game" is pressed on the home page
+class LobbyResource(Resource):
+    def post(self):
+        lobby_code = generate_lobby_code()
+        
+        while lobby_code in lobbies:
+            lobby_code = generate_lobby_code()
+        
+        lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None}
+        return {"lobby_code": lobby_code}, 201
+    
+# when player form is filled out 
 class PlayerResource(Resource):
-    def post(self, name, lobby_code, storyType=None):
+    def post(self, name, lobby_code, story_type=None):
         new_player = Player(name, lobby_code)
         if lobby_code in lobbies:
             lobbies[lobby_code]['players'].append(new_player)
         else:
-            lobbies[lobby_code] = {'players': [new_player], 'storyType': storyType if storyType else 'Other'}
+            lobbies[lobby_code] = {'players': [new_player], 'story_type': story_type if story_type else 'Other'}
         return new_player.to_dict(), 201
     
     def get(self, lobby_code):
@@ -78,27 +96,6 @@ class PlayerResource(Resource):
         players = lobbies[lobby_code]['players']
         return [{"name": player.name, "role": player.role} for player in players], 200
 
-class LobbyResource(Resource):
-    def post(self):
-        lobby_code = generate_lobby_code()
-        
-        while lobby_code in lobbies:
-            lobby_code = generate_lobby_code()
-        
-        lobbies[lobby_code] = {'players': [], 'storyType': None, 'story': None}
-        return {"lobby_code": lobby_code}, 201
-
-# For saving the story to the lobby
-class StoryResource(Resource):
-    def post(self, lobby_code):
-        story = request.json['story']
-        if lobby_code not in lobbies:
-            return {'error': 'Lobby not found'}, 404
-        lobbies[lobby_code]['story'] = story
-        socketio.emit('updateStory', story, room=lobby_code)
-        return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
-
-    
 class RoleAssignmentResource(Resource):
     def post(self, lobby_code, story_type):
         assign_roles(lobby_code, story_type)
@@ -107,6 +104,15 @@ class RoleAssignmentResource(Resource):
         
         return "Players successfully assigned roles"
 
+class StoryResource(Resource):
+    def post(self, lobby_code):
+        story = request.json['story']
+        if lobby_code not in lobbies:
+            return {'error': 'Lobby not found'}, 404
+        lobbies[lobby_code]['story'] = story
+        socketio.emit('updateStory', story, room=lobby_code)
+        return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
+    
 # ------------------ Routes ----------------------------------
 
 @socketio.on('join')
@@ -116,8 +122,13 @@ def handle_join(data):
     updated_players = [player.to_dict()['name'] for player in lobbies[lobby_code]['players']]
     socketio.emit('updatePlayers', updated_players, room=lobby_code)
 
-api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'storyType': None}, endpoint='player_without_storyType')
-api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/<string:storyType>', endpoint='player_with_storyType')
+# TODO
+@socketio.on('player_submitted_prompt')
+def handle_prompt_submission():
+    print('yup')
+
+api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'story_type': None}, endpoint='player_without_story_type')
+api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/<string:story_type>', endpoint='player_with_story_type')
 api.add_resource(PlayerResource, '/players/<string:lobby_code>/', endpoint='player_with_role')
 api.add_resource(LobbyResource, '/create_lobby')
 api.add_resource(RoleAssignmentResource, '/assign_roles/<string:lobby_code>/<string:story_type>')

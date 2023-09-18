@@ -1,10 +1,9 @@
 from prompts import prompts
 
 class ScriptBuilder:
-    def __init__(self, roles):
-        self.roles = roles
-        self.script = []
-    
+    def __init__(self, players, roles, storyType):
+        self.roles = lobby_code
+
     def _add_intro(self):
         for key, value in prompts.items():
             if 'introduction' in value['tags'] and 'crime' in value['tags']:
