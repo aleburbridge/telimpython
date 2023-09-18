@@ -5,9 +5,9 @@ from flask_socketio import SocketIO, join_room
 
 import random
 
-from prompts import prompts
+from segments import prompts
 from story_types import story_types
-from scriptBuilder import ScriptBuilder
+from ScriptBuilder import ScriptBuilder
 
 app = Flask(__name__)
 api = Api(app)
@@ -61,11 +61,15 @@ def assign_roles(lobby_code, story_type):
     return [{"name": player.name, "role": player.role} for player in players]
 
 def buildScript(lobby_code):
-    # need to get: roles, players, and story type
     script_players = [player for player in lobbies[lobby_code]['players']]
-    script_roles = [player.role for player in script_players]
     script_story_type = lobbies[lobby_code]['story_type']
-    script_builder = ScriptBuilder(script_players, script_roles, script_story_type) 
+    story = lobbies[lobby_code]['story']  
+    script_builder = ScriptBuilder(script_players, script_story_type, story)
+    
+    final_script = script_builder.build()
+    prompts = script_builder.extract_prompts(final_script)
+    
+    return final_script, prompts
     
 # ------------------- Resource Classes (API Routing) ------------------------
 
