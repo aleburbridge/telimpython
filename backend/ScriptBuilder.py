@@ -19,16 +19,16 @@ class ScriptBuilder:
         return random.choice(suitable_segments) if suitable_segments else None
     
     def build(self):
-        intro = self._get_segment_with_tags(["introduction"] + self.story_type)
+        intro = self._get_segment_with_tags(["introduction", self.story_type])
         if intro:
             self.script_segments.append(intro)
 
         for _ in range(len(self.players) - 2):
-            segment = self._get_segment_with_tags(["segment"] + self.story_type)
+            segment = self._get_segment_with_tags(["segment", self.story_type])
             if segment:
                 self.script_segments.append(segment)
 
-        conclusion = self._get_segment_with_tags(["conclusion"] + self.story_type)
+        conclusion = self._get_segment_with_tags(["conclusion", self.story_type])
         if conclusion:
             self.script_segments.append(conclusion)
 
@@ -44,12 +44,16 @@ class ScriptBuilder:
     
     def fill_in_initial_script_details(self):
         roles_to_names = {player.role: player.name for player in self.players}
+        roles_to_lastnames = {player.role: player.last_name for player in self.players}
 
         for segment in self.script_segments:
             for line in segment["lines"]:
                 for role, name in roles_to_names.items():
                     line["text"] = line["text"].replace(f"{{{role}}}", name)
                     
+                for role, lastname in roles_to_lastnames.items():
+                    line["text"] = line["text"].replace(f"{{{role}_lastname}}", lastname)
+                        
                 line["text"] = line["text"].replace("{main_story}", self.story)
-                
+                    
         return self.script_segments

@@ -38,7 +38,7 @@ segments = {
 
             {
                 "speaker": "cohost",
-                "text": "That's right {@host}, We are also being told {main_story_info_2}",
+                "text": "That's right {host}, We are also being told {main_story_info_2}",
                 "prompts": {
                     "id": "main_story_info_2",
                     "description": "More details about the story."
