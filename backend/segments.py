@@ -41,7 +41,7 @@ segments = {
                 "text": "That's right {host}, We are also being told {main_story_info_2}",
                 "prompts": {
                     "id": "main_story_info_2",
-                    "description": "More details about the story."
+                    "description": "More details about the story. What we know so far: {main_story_info}"
                 }
             }
         ],

@@ -60,7 +60,7 @@ def assign_roles(lobby_code, story_type):
             if idx < len(available_roles):
                 role = available_roles[idx]
                 player.role = role
-                player.lastname = random.choice(last_names[role])
+                player.last_name = random.choice(last_names[role])
                 
     return [{"name": player.name, "role": player.role, "lastname": player.lastname} for player in players]
 
@@ -102,8 +102,10 @@ def assign_prompts_to_players(players, prompts):
                 remaining_prompts.remove(prompt)  
                 break
 
+def get_dependent_prompts(prompt):
+    return [match.split("}")[0][1:] for match in prompt["prompts"]["description"].split("{")[1:]]
 
-# ------------------- Resource Classes (API Routing) ------------------------
+# ------------------- Resource Classes ------------------------
 
 # when "create game" or "join game" is pressed on the home page
 class LobbyResource(Resource):
@@ -113,7 +115,7 @@ class LobbyResource(Resource):
         while lobby_code in lobbies:
             lobby_code = generate_lobby_code()
         
-        lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None}
+        lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
         return {"lobby_code": lobby_code}, 201
     
 # when player form is filled out 
@@ -169,10 +171,36 @@ def handle_join(data):
     updated_players = [player.to_dict()['name'] for player in lobbies[lobby_code]['players']]
     socketio.emit('updatePlayers', updated_players, room=lobby_code)
 
-# TODO
-@socketio.on('player_submitted_prompt')
-def handle_prompt_submission():
-    print('yup')
+
+@socketio.on('prompt_answered')
+def handle_prompt_answered(data):
+    lobby_code = data['lobby_code']
+    prompt_id = data['prompt_id']
+    player_name = data['player_name']
+    answered_prompts = lobbies[lobby_code]['answered_prompts']
+
+    answered_prompts.add(prompt_id)
+
+    prompts = lobbies[lobby_code]['prompts']
+
+    available_prompts = []
+    for prompt in prompts:
+        if prompt["speaker"] == data['player_role']:
+            dependencies = get_dependent_prompts(prompt)
+            if all(dep in answered_prompts for dep in dependencies):
+                available_prompts.append(prompt)
+
+    if available_prompts:
+        player = next((p for p in lobbies[lobby_code]['players'] if p.name == player_name), None)
+
+    if player:
+        selected_prompt = available_prompts[0]
+        player.assigned_prompts.append(selected_prompt)
+ 
+        socketio.emit('new_prompts', [selected_prompt], room=request.sid)
+
+
+
 
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'story_type': None}, endpoint='player_without_story_type')
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/<string:story_type>', endpoint='player_with_story_type')
