@@ -39,10 +39,10 @@ def generate_lobby_code():
 def assign_roles(lobby_code, story_type):
     available_roles = story_types.get(story_type, [])
     
-    if "Host" in available_roles:
-        available_roles.remove("Host")
-    if "Cohost" in available_roles:
-        available_roles.remove("Cohost")
+    if "host" in available_roles:
+        available_roles.remove("host")
+    if "cohost" in available_roles:
+        available_roles.remove("cohost")
 
     random.shuffle(available_roles)
 
@@ -51,10 +51,10 @@ def assign_roles(lobby_code, story_type):
         if len(players) > len(available_roles) + 2: 
             raise ValueError("Too many players for the selected story type.")
         
-        players[0].role = "Host"
-        players[0].lastname = random.choice(last_names["Host"])
-        players[1].role = "Cohost"
-        players[1].lastname = random.choice(last_names["Cohost"])
+        players[0].role = "host"
+        players[0].last_name = random.choice(last_names["host"])
+        players[1].role = "cohost"
+        players[1].last_name = random.choice(last_names["cohost"])
         
         for idx, player in enumerate(players[2:]):
             if idx < len(available_roles):
@@ -62,7 +62,7 @@ def assign_roles(lobby_code, story_type):
                 player.role = role
                 player.last_name = random.choice(last_names[role])
                 
-    return [{"name": player.name, "role": player.role, "lastname": player.lastname} for player in players]
+    #return [{"name": player.name, "role": player.role, "lastname": player.last_name} for player in players]
 
 def buildScript(lobby_code):
     script_players = [player for player in lobbies[lobby_code]['players']]
@@ -73,7 +73,6 @@ def buildScript(lobby_code):
     final_script = script_builder.build()
     final_script = script_builder.fill_in_initial_script_details() # list of segments
     prompts = script_builder.extract_prompts(final_script)
-    
     return final_script, prompts
 
 def assign_prompts_to_players(players, prompts):
@@ -153,7 +152,6 @@ class StoryResource(Resource):
 
         script, prompts = buildScript(lobby_code)
         players = lobbies[lobby_code]['players']
-
         lobbies[lobby_code]['script'] = script
         lobbies[lobby_code]['prompts'] = prompts
 
@@ -178,28 +176,23 @@ def handle_prompt_answered(data):
     prompt_id = data['prompt_id']
     player_name = data['player_name']
     answered_prompts = lobbies[lobby_code]['answered_prompts']
-
     answered_prompts.add(prompt_id)
-
     prompts = lobbies[lobby_code]['prompts']
 
     available_prompts = []
     for prompt in prompts:
-        if prompt["speaker"] == data['player_role']:
+        if prompt["speaker"].lower() == data['player_role'].lower():
             dependencies = get_dependent_prompts(prompt)
             if all(dep in answered_prompts for dep in dependencies):
                 available_prompts.append(prompt)
 
-    if available_prompts:
-        player = next((p for p in lobbies[lobby_code]['players'] if p.name == player_name), None)
+    player = next((p for p in lobbies[lobby_code]['players'] if p.name == player_name), None)
 
-    if player:
+    if player and available_prompts:
         selected_prompt = available_prompts[0]
         player.assigned_prompts.append(selected_prompt)
- 
-        socketio.emit('new_prompts', [selected_prompt], room=request.sid)
-
-
+        
+        socketio.emit('new_prompts', player.assigned_prompts, room=request.sid)  # use the unique socket ID as room
 
 
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'story_type': None}, endpoint='player_without_story_type')
@@ -210,6 +203,7 @@ api.add_resource(RoleAssignmentResource, '/assign_roles/<string:lobby_code>/<str
 api.add_resource(StoryResource, '/story/<string:lobby_code>')
 
 # ------------------ Run ----------------------------------
+
 @app.route('/')
 def home():
     return 'Hello, Telimpromptu!'
