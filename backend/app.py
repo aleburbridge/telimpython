@@ -5,7 +5,7 @@ from flask_socketio import SocketIO, join_room
 
 import random
 
-from story_types import story_types, last_names
+from story_types import story_type_to_roles, last_names
 from ScriptBuilder import ScriptBuilder
 
 app = Flask(__name__)
@@ -26,18 +26,19 @@ class Player:
     def to_dict(self):
         return {
             'name': self.name,
+            'last_name': self.last_name,
             'lobby_code': self.lobby_code,
             'role': self.role,
             'assigned_prompts': self.assigned_prompts
         }
 
-# ------------------- Game Logic (Functions) ------------------------
+# ------------------- Game Logic ------------------------
 
 def generate_lobby_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
 
 def assign_roles(lobby_code, story_type):
-    available_roles = story_types.get(story_type, [])
+    available_roles = story_type_to_roles.get(story_type, []) # [] is the default value if None is returned
     
     if "host" in available_roles:
         available_roles.remove("host")
@@ -72,24 +73,25 @@ def buildScript(lobby_code):
     
     final_script = script_builder.build()
     final_script = script_builder.fill_in_initial_script_details() # list of segments
-    prompts = script_builder.extract_prompts(final_script)
-    return final_script, prompts
+    lines_with_prompts = script_builder.extract_lines_with_prompts(final_script)
+    return final_script, lines_with_prompts
 
-def assign_prompts_to_players(players, prompts):
-    remaining_prompts = prompts.copy()
+def assign_prompts_to_players(players, lines_with_prompts):
+    remaining_prompts = lines_with_prompts.copy()
 
     for player in players:
         while remaining_prompts:  
             selected_prompt = random.choice(remaining_prompts)
 
-            if selected_prompt["speaker"] != player.role:
-                player.assigned_prompts.append(selected_prompt)
+            if selected_prompt["speaker"].lower() != player.role.lower():
+                for prompt in selected_prompt["prompts"]:
+                    player.assigned_prompts.append(prompt)
                 remaining_prompts.remove(selected_prompt)
 
                 if not remaining_prompts:
                     break
 
-            average_prompts_per_player = len(prompts) // len(players)
+            average_prompts_per_player = len(lines_with_prompts) // len(players)
             if len(player.assigned_prompts) >= average_prompts_per_player:
                 break
     
@@ -97,7 +99,8 @@ def assign_prompts_to_players(players, prompts):
     for prompt in remaining_prompts:
         for player in players:
             if prompt["speaker"] != player.role:
-                player.assigned_prompts.append(prompt)
+                for extracted_prompt in prompt["prompts"]:
+                    player.assigned_prompts.append(extracted_prompt)
                 remaining_prompts.remove(prompt)  
                 break
 
@@ -150,12 +153,12 @@ class StoryResource(Resource):
         lobbies[lobby_code]['story'] = story
         socketio.emit('updateStory', story, room=lobby_code)
 
-        script, prompts = buildScript(lobby_code)
+        script, lines_with_prompts = buildScript(lobby_code)
         players = lobbies[lobby_code]['players']
         lobbies[lobby_code]['script'] = script
-        lobbies[lobby_code]['prompts'] = prompts
+        lobbies[lobby_code]['prompts'] = lines_with_prompts
 
-        assign_prompts_to_players(players, prompts)
+        assign_prompts_to_players(players, lines_with_prompts)
 
         return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
 

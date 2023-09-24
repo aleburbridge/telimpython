@@ -1,9 +1,9 @@
-story_types = {
-    #"crime": ["Host", "Cohost", "Guest Expert", "Detective", "Field Reporter", "Witness", "Politician", "Criminal"],
+story_type_to_roles = {
+    #"crime": ["host", "cohost", "guest expert", "detective", "field reporter", "witness", "politician", "criminal"],
     "crime": ["host", "cohost", "detective"],
-    "politics": ["Host", "Cohost", "Guest Expert", "Field Reporter", "Witness", "Politician"],
-    "sports": ["Host", "Cohost", "Sports Reporter", "Sports Player"],
-    "other": ["Host", "Cohost", "Guest Expert", "Detective", "Field Reporter", "Witness", "Politician", "Criminal"],
+    "politics": ["host", "cohost", "guest expert", "field reporter", "witness", "politician"],
+    "sports": ["host", "cohost", "sports reporter", "sports player"],
+    "other": ["host", "cohost", "guest expert", "detective", "field reporter", "witness", "politician", "criminal"],
 }
 
 last_names = {

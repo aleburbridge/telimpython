@@ -22,20 +22,11 @@ segments = {
                 "speaker": "host",
                 "text": "Our leading story tonight, {main_story}. Here's what we know so far: {main_story_info}",
                 "prompts": {
-                    "id": "main_story",
+                    "id": "main_story_info",
                     "description": "Initial details about the story."
                 }
             },
-
-            {
-                "speaker": "host",
-                "text": "{main_story_info}",
-                "prompts": {
-                    "id": "main_story_info",
-                    "description": "Details about the leading story."
-                }
-            },
-
+            
             {
                 "speaker": "cohost",
                 "text": "That's right {host}, We are also being told {main_story_info_2}",

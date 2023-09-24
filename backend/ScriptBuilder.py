@@ -8,47 +8,40 @@ class ScriptBuilder:
         self.story = story
         self.script_segments = []
         self.roles = [player.role.lower() for player in players]
-        print("In script builder. Roles are")
-        print(self.roles)
 
-    def _get_segment_with_tags(self, required_tags):
+    def _get_segments_with_tags(self, required_tags):
         suitable_segments = [
             segment for segment in segments.values() 
             if all(tag in segment["tags"] for tag in required_tags) and
             all(line["speaker"] in self.roles for line in segment["lines"]) and
             segment not in self.script_segments
         ]
-        return random.choice(suitable_segments) if suitable_segments else None
+        return suitable_segments if suitable_segments else None
     
     def build(self):
-        intro = self._get_segment_with_tags(["introduction", self.story_type])
+        intro = random.choice(self._get_segments_with_tags(["introduction", self.story_type]))
         if intro:
-            print("Intro is")
-            print(intro)
             self.script_segments.append(intro)
 
-        for _ in range(len(self.players) - 2):
-            segment = self._get_segment_with_tags(["segment", self.story_type])
-            if segment:
-                print("segment is")
-                print(segment)
-                self.script_segments.append(segment)
-            else:
-                print("No segment :(")
+        middle_segments = self._get_segments_with_tags(["segment", self.story_type])
+        random.shuffle(middle_segments)
+        for i in range(len(self.players) - 2):
+            if middle_segments[i]:
+                self.script_segments.append(middle_segments[i])
 
-        conclusion = self._get_segment_with_tags(["conclusion", self.story_type])
+        conclusion = random.choice(self._get_segments_with_tags(["conclusion", self.story_type]))
         if conclusion:
             self.script_segments.append(conclusion)
 
         return self.script_segments
     
-    def extract_prompts(self, script):
-        prompts = []
+    def extract_lines_with_prompts(self, script):
+        lines_with_prompts = []
         for segment in script:
             for line in segment["lines"]:
                 if "prompts" in line:
-                    prompts.append(line)
-        return prompts
+                    lines_with_prompts.append(line)
+        return lines_with_prompts
     
     def fill_in_initial_script_details(self):
         roles_to_names = {player.role: player.name for player in self.players}

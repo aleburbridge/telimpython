@@ -1,6 +1,5 @@
 import unittest
 from ScriptBuilder import ScriptBuilder
-
 from app import Player
 
 class TestScriptBuilder(unittest.TestCase):
