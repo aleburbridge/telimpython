@@ -37,33 +37,32 @@ class Player:
 def generate_lobby_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
 
+def assign_role_and_last_name(player, role):
+    player.role = role
+    player.last_name = random.choice(last_names[role.lower()])
+
 def assign_roles(lobby_code, story_type):
-    available_roles = story_type_to_roles.get(story_type, []) # [] is the default value if None is returned
-    
-    if "host" in available_roles:
-        available_roles.remove("host")
-    if "cohost" in available_roles:
-        available_roles.remove("cohost")
+    available_roles = story_type_to_roles.get(story_type, [])
+    special_roles = ["host", "cohost"]
+
+    for role in special_roles:
+        if role in available_roles:
+            available_roles.remove(role)
 
     random.shuffle(available_roles)
 
     if lobby_code in lobbies:
         players = lobbies[lobby_code]['players']
-        if len(players) > len(available_roles) + 2: 
+
+        if len(players) > len(available_roles) + len(special_roles):
             raise ValueError("Too many players for the selected story type.")
+
+        for i, role in enumerate(special_roles):
+            assign_role_and_last_name(players[i], role)
         
-        players[0].role = "host"
-        players[0].last_name = random.choice(last_names["host"])
-        players[1].role = "cohost"
-        players[1].last_name = random.choice(last_names["cohost"])
-        
-        for idx, player in enumerate(players[2:]):
-            if idx < len(available_roles):
-                role = available_roles[idx]
-                player.role = role
-                player.last_name = random.choice(last_names[role])
-                
-    #return [{"name": player.name, "role": player.role, "lastname": player.last_name} for player in players]
+        for i, player in enumerate(players[len(special_roles):]):
+            if i < len(available_roles):
+                assign_role_and_last_name(player, available_roles[i])
 
 def buildScript(lobby_code):
     script_players = [player for player in lobbies[lobby_code]['players']]
@@ -195,7 +194,7 @@ def handle_prompt_answered(data):
         selected_prompt = available_prompts[0]
         player.assigned_prompts.append(selected_prompt)
         
-        socketio.emit('new_prompts', player.assigned_prompts, room=request.sid)  # use the unique socket ID as room
+        socketio.emit('new_prompts', player.assigned_prompts, room=request.sid) 
 
 
 api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'story_type': None}, endpoint='player_without_story_type')
