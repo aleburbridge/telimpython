@@ -40,25 +40,20 @@ segments = {
         "crime_intro_2": {
         "tags": ["introduction", "crime"],
         "lines": [
-            {"speaker": "host", "text": "You're watching Telimpromptu News. I'm your host, {host} {host_lastname}."},
-
-            {"speaker": "cohost", "text": "And I'm {cohost} {cohost_lastname}. Tonight's top story, {main_story}"},
-
             {
-                "speaker": "host",
-                "text": "Our leading story tonight, {main_story}. Here's what we know so far: {main_story_info}",
-                "prompts": {
-                    "id": "main_story_info",
-                    "description": "Initial details about the story."
-                }
-            },
+                "speaker": "host", 
+                "text": "You're watching Telimpromptu News. I'm your host, {host} {host_lastname}."},
+
+            {   
+                "speaker": "cohost", 
+                "text": "And I'm {cohost} {cohost_lastname}. Tonight's top story, {main_story}. {host} will give you the grizzly details."},
             
             {
-                "speaker": "cohost",
-                "text": "That's right {host}, We are also being told {main_story_info_2}",
+                "speaker": "host",
+                "text": "{main_story_info_3}",
                 "prompts": {
-                    "id": "main_story_info_2",
-                    "description": "More details about the story. What we know so far: {main_story_info}"
+                    "id": "main_story_info_3",
+                    "description": "The initial details of the story."
                 }
             }
         ],
