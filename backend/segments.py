@@ -37,6 +37,32 @@ segments = {
             }
         ],
     },
+        "crime_intro_2": {
+        "tags": ["introduction", "crime"],
+        "lines": [
+            {"speaker": "host", "text": "You're watching Telimpromptu News. I'm your host, {host} {host_lastname}."},
+
+            {"speaker": "cohost", "text": "And I'm {cohost} {cohost_lastname}. Tonight's top story, {main_story}"},
+
+            {
+                "speaker": "host",
+                "text": "Our leading story tonight, {main_story}. Here's what we know so far: {main_story_info}",
+                "prompts": {
+                    "id": "main_story_info",
+                    "description": "Initial details about the story."
+                }
+            },
+            
+            {
+                "speaker": "cohost",
+                "text": "That's right {host}, We are also being told {main_story_info_2}",
+                "prompts": {
+                    "id": "main_story_info_2",
+                    "description": "More details about the story. What we know so far: {main_story_info}"
+                }
+            }
+        ],
+    },
     "crime_segment_1": {
         "tags": ["segment", "crime"],
         "lines": [
