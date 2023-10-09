@@ -1,20 +1,16 @@
-story_type_to_roles = {
-    #"crime": ["host", "cohost", "guest expert", "detective", "field reporter", "witness", "politician", "criminal"],
-    "crime": ["host", "cohost", "detective"],
-    "politics": ["host", "cohost", "guest expert", "field reporter", "witness", "politician"],
-    "sports": ["host", "cohost", "sports reporter", "sports player"],
-    "other": ["host", "cohost", "guest expert", "detective", "field reporter", "witness", "politician", "criminal"],
-}
+from roles import Role
+from enum import Enum
 
-last_names = {
-    "host": ["Hosterson", "McHostly", "Hostdanews"],
-    "cohost": ["McCohost", "Reportsalot"],
-    "guest expert": ["Expertson"],
-    "detective": ["Gumshoe"],
-    "field reporter": ["Fieldsley"],
-    "witness": ["Sawdathing"],
-    "politician": ["Kennedy"],
-    "criminal": ["McGuilty"],
-    "sports reporter": ["Kickaball"],
-    "sports player": ["Runquick"]
+class StoryType(Enum):
+    CRIME = "crime"
+    POLITICS = "politics"
+    SPORTS = "sports"
+    OTHER = "other"
+
+
+story_type_to_roles = {
+    StoryType.CRIME: [Role.HOST, Role.COHOST, Role.DETECTIVE],
+    StoryType.POLITICS: [Role.HOST, Role.COHOST, Role.GUEST_EXPERT, Role.FIELD_REPORTER, Role.WITNESS, Role.POLITICIAN],
+    StoryType.SPORTS: [Role.HOST, Role.COHOST, Role.SPORTS_REPORTER, Role.SPORTS_PLAYER],
+    StoryType.OTHER: [Role.HOST, Role.COHOST, Role.GUEST_EXPERT, Role.DETECTIVE, Role.FIELD_REPORTER, Role.WITNESS, Role.POLITICIAN, Role.CRIMINAL],
 }

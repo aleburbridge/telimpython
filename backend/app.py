@@ -5,7 +5,8 @@ from flask_socketio import SocketIO, join_room
 
 import random
 
-from story_types import story_type_to_roles, last_names
+from roles import Role, last_names
+from story_types import StoryType, story_type_to_roles
 from ScriptBuilder import ScriptBuilder
 
 app = Flask(__name__)
@@ -14,6 +15,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
 
 lobbies = {} 
+# STRUCTURE OF LOBBIES: lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
 
 class Player:
     def __init__(self, name, lobby_code=None, role=None, assigned_prompts=None):
@@ -41,9 +43,9 @@ def assign_role_and_last_name(player, role):
     player.role = role
     player.last_name = random.choice(last_names[role.lower()])
 
-def assign_roles(lobby_code, story_type):
+def assign_roles(lobby_code, story_type: StoryType):
     available_roles = story_type_to_roles.get(story_type, [])
-    special_roles = ["host", "cohost"]
+    special_roles = [Role.HOST, Role.COHOST]
 
     for role in special_roles:
         if role in available_roles:
@@ -58,11 +60,11 @@ def assign_roles(lobby_code, story_type):
             raise ValueError("Too many players for the selected story type.")
 
         for i, role in enumerate(special_roles):
-            assign_role_and_last_name(players[i], role)
+            assign_role_and_last_name(players[i], role.value)
         
         for i, player in enumerate(players[len(special_roles):]):
             if i < len(available_roles):
-                assign_role_and_last_name(player, available_roles[i])
+                assign_role_and_last_name(player, available_roles[i].value)
 
 def buildScript(lobby_code):
     script_players = [player for player in lobbies[lobby_code]['players']]

@@ -14,9 +14,15 @@ segments = {
     "crime_intro_1": {
         "tags": ["introduction", "crime"],
         "lines": [
-            {"speaker": "host", "text": "I'm {host} {host_lastname} with Telimpropmtu news."},
+            {
+                "speaker": "host", 
+                "text": "I'm {host} {host_lastname} with Telimpropmtu news."
+            },
 
-            {"speaker": "cohost", "text": "And I'm {cohost} {cohost_lastname}"},
+            {
+                "speaker": "cohost", 
+                "text": "And I'm {cohost} {cohost_lastname}"
+            },
 
             {
                 "speaker": "host",
@@ -73,7 +79,10 @@ segments = {
                     "description": "Write a discovery for the detective to present."
                 }
             },
-            {"speaker": "host", "text": "Horrific."},
+            {
+                "speaker": "host", 
+                "text": "Horrific."
+            },
             {
                 "speaker": "detective",
                 "text": "It gets worse. In all my years as a detective never before have I seen {detective_info2}.",
