@@ -3,12 +3,13 @@ from flask_restful import Api, Resource
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
 from flask_sqlalchemy import SQLAlchemy
+
 from roles import Role, last_names
 from story_types import StoryType, story_type_to_roles
 from ScriptBuilder import ScriptBuilder
 from routes import initialize_routes
 
-import random
+import random, string
 
 # init
 app = Flask(__name__)
@@ -17,11 +18,11 @@ db = SQLAlchemy(app)
 api = Api(app)
 CORS(app)  
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
-
 initialize_routes()
 
 lobbies = {} 
 # STRUCTURE OF LOBBIES: lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
+
 
 class Player:
     def __init__(self, name, lobby_code=None, role=None, assigned_prompts=None):
@@ -44,6 +45,9 @@ class Player:
 
 def generate_lobby_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
+
+def generate_player_code():
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(6))
 
 def assign_role_and_last_name(player, role):
     player.role = role
