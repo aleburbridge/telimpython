@@ -1,11 +1,17 @@
-defaultStories = [
-  "Pockets stop working worldwide",
-  "Very hungry caterpillar escapes the zoo",
-  "Local man discovers gold nugget in the river worth over $50",
-  "Money is up 30%",
-  "Uninspired group of friends has game create news story for them rather than make it themselves"
-  "Scrappy-doo found dead in Miami"
-]
+def get_segments_with_tags(tags: list, roles):
+    suitable_segments = [
+        segment for segment in segments.values() 
+        if all(tag in segment["tags"] for tag in tags) and
+        all(line["speaker"] in roles for line in segment["lines"])
+    ]
+    return suitable_segments
+
+def get_prompt_by_id(prompt_id):
+    for segment in segments.values():
+        for line in segment['lines']:
+            if 'prompts' in line and line['prompts']['id'] == prompt_id.lower():
+                return line['prompts']
+    return None
 
 segments = {
     # GENERAL ---------------------------------------------------------------------------------

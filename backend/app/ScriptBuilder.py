@@ -1,6 +1,5 @@
 import random
-from segments import segments
-
+from segments import segments, get_prompt_by_id, get_segments_with_tags
 class ScriptBuilder:
     def __init__(self, players, story_type, story):
         self.players = players
@@ -9,27 +8,20 @@ class ScriptBuilder:
         self.script_segments = []
         self.roles = [player.role.lower() for player in players]
 
-    def _get_segments_with_tags(self, required_tags):
-        suitable_segments = [
-            segment for segment in segments.values() 
-            if all(tag in segment["tags"] for tag in required_tags) and
-            all(line["speaker"] in self.roles for line in segment["lines"]) and
-            segment not in self.script_segments
-        ]
-        return suitable_segments if suitable_segments else None
+    # and segment not in self.script_segments
     
     def build(self):
-        intro = random.choice(self._get_segments_with_tags(["introduction", self.story_type]))
+        intro = random.choice(get_segments_with_tags(["introduction", self.story_type]), self.roles)
         if intro:
             self.script_segments.append(intro)
 
-        middle_segments = self._get_segments_with_tags(["segment", self.story_type])
+        middle_segments = get_segments_with_tags(["segment", self.story_type], self.roles)
         random.shuffle(middle_segments)
         for i in range(len(self.players) - 2):
             if middle_segments[i]:
                 self.script_segments.append(middle_segments[i])
 
-        conclusion = random.choice(self._get_segments_with_tags(["conclusion", self.story_type]))
+        conclusion = random.choice(get_segments_with_tags(["conclusion", self.story_type]), self.roles)
         if conclusion:
             self.script_segments.append(conclusion)
 
@@ -46,8 +38,7 @@ class ScriptBuilder:
     def fill_in_initial_script_details(self):
         roles_to_names = {player.role: player.name for player in self.players}
         roles_to_lastnames = {player.role: player.last_name for player in self.players}
-        print("lastnames:")
-        print(roles_to_lastnames)
+
         for segment in self.script_segments:
             for line in segment["lines"]:
                 for role, name in roles_to_names.items():

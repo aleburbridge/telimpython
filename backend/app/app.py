@@ -72,7 +72,7 @@ def assign_roles(lobby_code, story_type: StoryType):
             if i < len(available_roles):
                 assign_role_and_last_name(player, available_roles[i].value)
 
-def buildScript(lobby_code):
+def build_script(lobby_code):
     script_players = [player for player in lobbies[lobby_code]['players']]
     script_story_type = lobbies[lobby_code]['story_type']
     script_story = lobbies[lobby_code]['story']  
@@ -160,7 +160,7 @@ class StoryResource(Resource):
         lobbies[lobby_code]['story'] = story
         socketio.emit('updateStory', story, room=lobby_code)
 
-        script, lines_with_prompts = buildScript(lobby_code)
+        script, lines_with_prompts = build_script(lobby_code)
         players = lobbies[lobby_code]['players']
         lobbies[lobby_code]['script'] = script
         lobbies[lobby_code]['prompts'] = lines_with_prompts
