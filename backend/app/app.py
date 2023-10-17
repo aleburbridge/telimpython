@@ -7,18 +7,17 @@ from flask_sqlalchemy import SQLAlchemy
 from roles import Role, last_names
 from story_types import StoryType, story_type_to_roles
 from ScriptBuilder import ScriptBuilder
-from routes import initialize_routes
 
 import random, string
 
 # init
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # using SQLite and the database file is named site.db
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///telimpromptu.db' 
 db = SQLAlchemy(app)
+db.create_all()
 api = Api(app)
 CORS(app)  
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
-initialize_routes()
 
 lobbies = {} 
 # STRUCTURE OF LOBBIES: lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
@@ -43,7 +42,7 @@ class Player:
 
 # ------------------- Game Logic ------------------------
 
-def generate_lobby_code():
+def generate_room_code():
     return ''.join([str(random.randint(0, 9)) for _ in range(4)])
 
 def generate_player_code():
@@ -118,62 +117,6 @@ def assign_prompts_to_players(players, lines_with_prompts):
 def get_dependent_prompts(prompt):
     return [match.split("}")[0][1:] for match in prompt["prompts"]["description"].split("{")[1:]]
 
-# ------------------- Resource Classes ------------------------
-
-# when "create game" or "join game" is pressed on the home page
-class LobbyResource(Resource):
-    def post(self):
-        lobby_code = generate_lobby_code()
-        
-        while lobby_code in lobbies:
-            lobby_code = generate_lobby_code()
-        
-        lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
-        return {"lobby_code": lobby_code}, 201
-    
-# when player form is filled out 
-class PlayerResource(Resource):
-    def post(self, name, lobby_code, story_type=None):
-        new_player = Player(name, lobby_code)
-        if lobby_code in lobbies:
-            lobbies[lobby_code]['players'].append(new_player)
-        else:
-            lobbies[lobby_code] = {'players': [new_player], 'story_type': story_type if story_type else 'Other'}
-        return new_player.to_dict(), 201
-    
-    def get(self, lobby_code):
-        if lobby_code not in lobbies:
-            return {'error': 'Lobby not found'}, 404
-        players = lobbies[lobby_code]['players']
-        return [{"name": player.name, "role": player.role} for player in players], 200
-
-class RoleAssignmentResource(Resource):
-    def post(self, lobby_code, story_type):
-        assign_roles(lobby_code, story_type)
-
-        lobbies[lobby_code]['story_type'] = story_type 
-        socketio.emit('start_game', room=lobby_code)
-        
-        return "Players successfully assigned roles"
-
-class StoryResource(Resource):
-    def post(self, lobby_code):
-        story = request.json['story']
-        if lobby_code not in lobbies:
-            return {'error': 'Lobby not found'}, 404
-        lobbies[lobby_code]['story'] = story
-        socketio.emit('updateStory', story, room=lobby_code)
-
-        script, lines_with_prompts = build_script(lobby_code)
-        players = lobbies[lobby_code]['players']
-        lobbies[lobby_code]['script'] = script
-        lobbies[lobby_code]['prompts'] = lines_with_prompts
-
-        assign_prompts_to_players(players, lines_with_prompts)
-
-        return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
-
-    
 # ------------------ Socket Events ----------------------------------
 
 @socketio.on('join')
@@ -182,7 +125,6 @@ def handle_join(data):
     join_room(lobby_code)
     updated_players = [player.to_dict()['name'] for player in lobbies[lobby_code]['players']]
     socketio.emit('updatePlayers', updated_players, room=lobby_code)
-
 
 @socketio.on('prompt_answered')
 def handle_prompt_answered(data):
