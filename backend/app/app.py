@@ -2,17 +2,23 @@ from flask import Flask, request
 from flask_restful import Api, Resource
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
-
-import random
-
+from flask_sqlalchemy import SQLAlchemy
 from roles import Role, last_names
 from story_types import StoryType, story_type_to_roles
 from ScriptBuilder import ScriptBuilder
+from routes import initialize_routes
 
+import random
+
+# init
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # using SQLite and the database file is named site.db
+db = SQLAlchemy(app)
 api = Api(app)
 CORS(app)  
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
+
+initialize_routes()
 
 lobbies = {} 
 # STRUCTURE OF LOBBIES: lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
@@ -164,7 +170,7 @@ class StoryResource(Resource):
         return {"message": f"Story successfully saved for lobby {lobby_code}: {story}"}, 200
 
     
-# ------------------ Routes ----------------------------------
+# ------------------ Socket Events ----------------------------------
 
 @socketio.on('join')
 def handle_join(data):
@@ -197,14 +203,6 @@ def handle_prompt_answered(data):
         player.assigned_prompts.append(selected_prompt)
         
         socketio.emit('new_prompts', player.assigned_prompts, room=request.sid) 
-
-
-api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/', defaults={'story_type': None}, endpoint='player_without_story_type')
-api.add_resource(PlayerResource, '/player/<string:lobby_code>/<string:name>/<string:story_type>', endpoint='player_with_story_type')
-api.add_resource(PlayerResource, '/players/<string:lobby_code>/', endpoint='player_with_role')
-api.add_resource(LobbyResource, '/create_lobby')
-api.add_resource(RoleAssignmentResource, '/assign_roles/<string:lobby_code>/<string:story_type>')
-api.add_resource(StoryResource, '/story/<string:lobby_code>')
 
 # ------------------ Run ----------------------------------
 
