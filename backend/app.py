@@ -1,44 +1,21 @@
-from flask import Flask, request
-from flask_restful import Api, Resource
+from flask import request
+from flask_socketio import join_room
+from flask import Flask
 from flask_cors import CORS
-from flask_socketio import SocketIO, join_room
-from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO
 
-from roles import Role, last_names
-from story_types import StoryType, story_type_to_roles
-from ScriptBuilder import ScriptBuilder
+from database.routes import routes
+from script_building.roles import Role, last_names
+from script_building.story_types import StoryType, story_type_to_roles
+from script_building.ScriptBuilder import ScriptBuilder
 
 import random, string
 
-# init
+# ------------------- Init ------------------------
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///telimpromptu.db' 
-db = SQLAlchemy(app)
-db.create_all()
-api = Api(app)
 CORS(app)  
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
-
-lobbies = {} 
-# STRUCTURE OF LOBBIES: lobbies[lobby_code] = {'players': [], 'story_type': None, 'story': None, 'answered_prompts': set()}
-
-
-class Player:
-    def __init__(self, name, lobby_code=None, role=None, assigned_prompts=None):
-        self.name = name
-        self.last_name = None
-        self.lobby_code = lobby_code
-        self.role = role
-        self.assigned_prompts = assigned_prompts or []
-
-    def to_dict(self):
-        return {
-            'name': self.name,
-            'last_name': self.last_name,
-            'lobby_code': self.lobby_code,
-            'role': self.role,
-            'assigned_prompts': self.assigned_prompts
-        }
 
 # ------------------- Game Logic ------------------------
 
@@ -151,10 +128,7 @@ def handle_prompt_answered(data):
         socketio.emit('new_prompts', player.assigned_prompts, room=request.sid) 
 
 # ------------------ Run ----------------------------------
-
-@app.route('/')
-def home():
-    return 'Hello, Telimpromptu!'
+import routes
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
