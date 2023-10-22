@@ -1,4 +1,4 @@
-from roles import Role
+from script_building.roles import Role
 from enum import Enum
 
 class StoryType(Enum):

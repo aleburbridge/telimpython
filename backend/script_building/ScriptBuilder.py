@@ -1,5 +1,5 @@
 import random
-from segments import get_segments_with_tags
+from script_building.segments import get_segments_with_tags
 class ScriptBuilder:
     def __init__(self, players, story_type, story):
         self.players = players

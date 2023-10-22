@@ -4,16 +4,18 @@ from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
-from database.routes import routes
 from script_building.roles import Role, last_names
 from script_building.story_types import StoryType, story_type_to_roles
 from script_building.ScriptBuilder import ScriptBuilder
+
+from database.routes import bp
 
 import random, string
 
 # ------------------- Init ------------------------
 
 app = Flask(__name__)
+app.register_blueprint(bp)
 CORS(app)  
 socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"])
 
@@ -128,7 +130,5 @@ def handle_prompt_answered(data):
         socketio.emit('new_prompts', player.assigned_prompts, room=request.sid) 
 
 # ------------------ Run ----------------------------------
-import routes
-
 if __name__ == '__main__':
     socketio.run(app, debug=True)

@@ -1,7 +1,6 @@
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import  create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Player, Base
+from database.models import Base
 
 def init_db():
     engine = create_engine("sqlite:///db.db", echo=True)
