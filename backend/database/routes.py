@@ -1,6 +1,8 @@
-from flask import Blueprint
+import sqlite3
+from flask import Blueprint, jsonify
 from database.models import Player, Room
 from database.init_db import init_db
+import random, string
 
 database_session = init_db()
 bp = Blueprint('routes', __name__)
@@ -9,18 +11,33 @@ bp = Blueprint('routes', __name__)
 def home():
     return '📺'
 
-@bp.route('/create_room/<string:story_type>', methods=['POST'])
-def create_room(story_type):
+@bp.route('/get_room_code', methods=['GET'])
+def get_room_code():
+    while True:
+        room_code = ''.join(random.choice(string.ascii_uppercase) for _ in range(4))
+        existing_room = database_session.query(Room).filter_by(id=room_code).first()
+        
+        if existing_room is None:
+            break
+    
+    return jsonify({"room_code": room_code})
+
+@bp.route('/create_room/<string:room_code>/<string:story_type>', methods=['POST'])
+def create_room(room_code, story_type):
     new_room = Room(
-        story_type=story_type
+        id=room_code,
+        story_type=story_type,
     )
     database_session.add(new_room)
     database_session.commit()
 
+    return jsonify({"status": "success", "message": "Room created"}), 201
+
+
 @bp.route('/create_player/<string:name>/<string:room_code>', methods=['POST'])
 def add_player(name, room_code):
     new_player = Player(
-        name=name, 
+        firstname=name, 
         room_code=room_code,
     )
     database_session.add(new_player)

@@ -11,6 +11,7 @@ class Player(Base):
     firstname = Column("firstname", String)
     lastname = Column("lastname", String)
     room_id = Column("room_id", Integer, ForeignKey('rooms.id'))
+    room = relationship("Room", back_populates="players")
     role = Column("role", String)
 
     def __init__(self, firstname, room_id):
@@ -27,11 +28,12 @@ class Player(Base):
 class Room(Base):
     __tablename__ = "rooms"
 
-    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    id = Column("id", String, primary_key=True)
     story_type = Column("story_type", String)
     players = relationship("Player", back_populates="room")
 
-    def __init__(self, story_type):
+    def __init__(self, id, story_type):
+        self.id = id
         self.story_type = story_type
 
     def __repr__(self):
