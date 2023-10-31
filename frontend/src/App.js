@@ -1,24 +1,31 @@
-import logo from './logo.svg';
 import './App.css';
+import HomePage from './HomePage';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { red } from '@mui/material/colors';
+
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    background: {
+      default: '#000040',
+    },
+    button: {
+      buttonRed: red[900],
+    },
+  },
+});
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline>
+        <div className="App">
+          <HomePage/>
+        </div>
+      </CssBaseline>
+    </ThemeProvider>
   );
 }
 
