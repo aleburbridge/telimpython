@@ -36,7 +36,7 @@ function HomePage() {
                 <Join goBack={ () => setPageState('default') }/>
             )}
             {pageState === 'create' && (
-                <Create/>
+                <Create goBack={ () => setPageState('default') }/>
             )}
 
             <Link style={{ display: 'block', marginTop: theme.spacing(2) }} onClick={handleDescriptionClick}>What is Telimpromptu?</Link>
