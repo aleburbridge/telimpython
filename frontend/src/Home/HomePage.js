@@ -1,14 +1,17 @@
 import { React, useState } from 'react';
-import Link from '@mui/material/Link';
 import { useTheme } from '@mui/material/styles';
+import Link from '@mui/material/Link';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import AnimatedHeader from './AnimatedHeader';
-import Button from '@mui/material/Button';
 import Join from './Join';
 import Create from './Create';
 import Footer from './Footer';
+import RedButton from '../Components/RedButton';
 
 function HomePage() {
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    
     const [showDescription, setShowDescription] = useState(false);
     const [pageState, setPageState] = useState('default');
 
@@ -19,18 +22,18 @@ function HomePage() {
     return (
         <div style={{ textAlign: 'center' }}>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: theme.spacing(8) }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? theme.spacing(4) : theme.spacing(8) }}>
                 <AnimatedHeader />
             </div>
 
             {pageState === 'default' && (
                 <div>
-                    <Button onClick={() => setPageState('join')}size="large" variant="contained" style={{ backgroundColor: theme.palette.button.buttonRed, color: 'white' }} sx={{ mt: 2 }}>Join Game</Button><br/>
-                    <Button onClick={() => setPageState('create')} size="large" variant="contained" style={{ backgroundColor: theme.palette.button.buttonRed, color: 'white' }} sx={{ mt: 2 }}>Create Game</Button><br/>
+                    <RedButton label={'Join Game'} onClick={() => setPageState('join')}/><br/>
+                    <RedButton label={'Create Game'} onClick={() => setPageState('create')}/>
                 </div>
             )}
             {pageState === 'join' && (
-                <Join/>
+                <Join goBack={ () => setPageState('default') }/>
             )}
             {pageState === 'create' && (
                 <Create/>
