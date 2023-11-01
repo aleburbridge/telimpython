@@ -1,14 +1,14 @@
-import { React, useState } from 'react';
+import { React, useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import Link from '@mui/material/Link';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import AnimatedHeader from './AnimatedHeader';
 import Join from './Join';
-import Create from './Create';
 import Footer from './Footer';
 import RedButton from '../Components/RedButton';
 
 function HomePage() {
+    const url = "http://localhost:5000";
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     
@@ -18,7 +18,19 @@ function HomePage() {
     const handleDescriptionClick = () => {
         setShowDescription(!showDescription);
     }
-  
+
+    const handleCreateGame = () => {
+        fetch(`${url}/api/generate_room_code`)
+        .then((res) => res.json()
+        .then((data) => {
+                localStorage.setItem("room_code", data.room_code);
+                setPageState('create');
+            })
+        ).catch(error => {
+            console.log(error);
+        });
+    }
+
     return (
         <div style={{ textAlign: 'center' }}>
 
@@ -29,14 +41,14 @@ function HomePage() {
             {pageState === 'default' && (
                 <div>
                     <RedButton label={'Join Game'} onClick={() => setPageState('join')}/><br/>
-                    <RedButton label={'Create Game'} onClick={() => setPageState('create')}/>
+                    <RedButton label={'Create Game'} onClick={handleCreateGame}/>
                 </div>
             )}
             {pageState === 'join' && (
                 <Join goBack={ () => setPageState('default') }/>
             )}
             {pageState === 'create' && (
-                <Create goBack={ () => setPageState('default') }/>
+                <Join isCreating={true} goBack={ () => setPageState('default') }/>
             )}
 
             <Link style={{ display: 'block', marginTop: theme.spacing(2) }} onClick={handleDescriptionClick}>What is Telimpromptu?</Link>
