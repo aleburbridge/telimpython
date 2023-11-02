@@ -7,6 +7,7 @@ import Join from './Join';
 import Footer from './Footer';
 import RedButton from '../Components/RedButton';
 
+//TODO: friendly error messaging
 function HomePage() {
     const url = "http://localhost:5000";
     const theme = useTheme();
