@@ -13,12 +13,12 @@ def create_tables():
                    id INTEGER PRIMARY KEY AUTOINCREMENT
                    )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS rooms(
-                  room_code INTEGER PRIMARY KEY
+                  room_code INTEGER PRIMARY KEY AUTOINCREMENT
                    )''')
     connection.commit()
     connection.close()
 
-def check_room_code_exists(room_code):
+def database_has_room_code(room_code):
     cursor, connection = get_db_cursor()
     cursor.execute('SELECT 1 FROM rooms WHERE room_code = ?', (room_code,))
     isExisting = cursor.fetchone()
